@@ -1,0 +1,111 @@
+"use client";
+
+import { formatDistanceToNow, format } from "date-fns";
+import { useState } from "react";
+import type { DailyEntry } from "@/types/dashboard";
+import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { deleteDailyEntry } from "@/app/actions/dailyEntry";
+import { EntryHeader } from "./header/EntryHeader";
+import { DailyMetrics } from "./metrics/DailyMetrics";
+import { SupplementsList } from "./supplements/SupplementList";
+import { GymSession } from "./gym-session/GymSession";
+import { Reflections } from "./reflections/Reflections";
+import { EditEntryDialog } from "./edit-dialog/EditEntryDialog";
+import { DeleteConfirmDialog } from "./delete-dialog/DeleteConfirmDialog";
+
+interface EntryViewerProps {
+  entries: DailyEntry[];
+  currentIndex: number;
+  onNavigate: (index: number) => void;
+}
+
+export default function EntryViewer({ entries, currentIndex, onNavigate }: EntryViewerProps) {
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // Delete goes through the Server Action + TanStack Query mutation;
+  // the dashboard re-renders via router.refresh() on success.
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteDailyEntry(id),
+    onSuccess: (result) => {
+      if (result.ok) {
+        router.refresh();
+      } else {
+        setError(result.error ?? "Failed to delete entry. Please try again.");
+      }
+    },
+    onError: () => {
+      setError("Failed to delete entry. Please try again.");
+    },
+  });
+
+  if (!entries || entries.length === 0 || !entries[currentIndex]) {
+    return (
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 relative z-10">
+        <p className="text-gray-500 dark:text-gray-400">No entries available</p>
+      </div>
+    );
+  }
+
+  const entry = entries[currentIndex];
+  const isFirst = currentIndex === 0;
+  const isLast = currentIndex === entries.length - 1;
+  const isDeleting = deleteMutation.isPending;
+
+  const confirmDelete = () => {
+    setError(null);
+    deleteMutation.mutate(entry.id);
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 relative z-10">
+      <EntryHeader
+        entry={entry}
+        currentIndex={currentIndex}
+        totalEntries={entries.length}
+        isFirst={isFirst}
+        isLast={isLast}
+        isDeleting={isDeleting}
+        onNavigate={onNavigate}
+        onEdit={() => setIsEditing(true)}
+        onDelete={() => setIsDeleteDialogOpen(true)}
+      />
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 rounded-md text-sm">
+          {error}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Daily Metrics */}
+        <DailyMetrics entry={entry} />
+
+        {/* Supplements */}
+        <SupplementsList entry={entry} />
+
+        {/* Gym Session */}
+        <GymSession entry={entry} />
+      </div>
+
+      <Reflections entry={entry} />
+
+      <EditEntryDialog
+        isOpen={isEditing}
+        onClose={() => setIsEditing(false)}
+        entry={entry}
+      />
+
+      <DeleteConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        entryDate={entry.date}
+        isDeleting={isDeleting}
+      />
+    </div>
+  );
+}

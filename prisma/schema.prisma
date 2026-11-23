@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_DATABASE_URL")
+}
+
+model User {
+  id          String       @id @default(cuid())
+  email       String       @unique
+  externalId  String?      @unique // Clerk subject, when auth is configured
+  name        String?
+  createdAt   DateTime     @default(now())
+  entries     DailyEntry[]
+  supplements Supplement[]
+  goals       Goal[]
+
+  @@map("user")
+}
+
+model DailyEntry {
+  id            String          @id @default(cuid())
+  date          DateTime
+  timeInOffice  Float
+  calories      Int
+  protein       Int
+  bodyWeight    Float?
+  gripStrength  Float?
+  // Recovery + mood (Phase 2)
+  sleepHours    Float? // 0-24
+  sleepQuality  Int? // 1-5
+  mood          Int? // 1-5
+  energy        Int? // 1-5
+  notes         String?
+  activities    String?
+  improvements  String?
+  // Ownership + soft delete
+  userId        String
+  user          User            @relation(fields: [userId], references: [id])
+  deletedAt     DateTime? // null = active
+  supplements   SupplementLog[]
+  gymSession    GymSession?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([userId, date])
+  @@map("daily_entry")
+}
+
+model Supplement {
+  id     String          @id @default(cuid())
+  name   String
+  userId String
+  user   User            @relation(fields: [userId], references: [id])
+  logs   SupplementLog[]
+
+  @@unique([userId, name])
+  @@map("supplement")
+}
+
+model SupplementLog {
+  id           String     @id @default(cuid())
+  entry        DailyEntry @relation(fields: [entryId], references: [id])
+  entryId      String
+  supplement   Supplement @relation(fields: [supplementId], references: [id])
+  supplementId String
+  taken        Boolean
+
+  @@index([entryId])
+  @@index([supplementId])
+  @@map("supplement_log")
+}
+
+model GymSession {
+  id        String        @id @default(cuid())
+  entry     DailyEntry    @relation(fields: [entryId], references: [id])
+  entryId   String        @unique // One-to-one with DailyEntry
+  type      String // push | pull | legs & shoulder | other
+  exercises GymExercise[]
+
+  @@map("gym_session")
+}
+
+model GymExercise {
+  id        String     @id @default(cuid())
+  session   GymSession @relation(fields: [sessionId], references: [id])
+  sessionId String
+  name      String
+  weight    Float
+  reps      Int
+  order     Int
+
+  @@index([sessionId])
+  @@map("gym_exercise")
+}
+
+model Goal {
+  id     String @id @default(cuid())
+  type   String // protein | calories | office_hours | gym_sessions | weight | sleep
+  target Float
+  period String // daily | weekly | monthly
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([userId, type])
+  @@map("goal")
+}
