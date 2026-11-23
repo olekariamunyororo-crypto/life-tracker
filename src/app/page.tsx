@@ -1,11 +1,25 @@
-import { DailyEntryForm } from "@/components/forms/daily-entry";
+import { TodayView } from "@/components/kolo/TodayView";
+import { entryToTodaySnapshot } from "@/lib/koloStats";
+import { prisma } from "@/lib/db";
 
-// The form is a client island; the page itself is a static shell.
-export default function Home() {
-  return (
-    <div className="container mx-auto px-4 -mt-4 pb-20 sm:py-8 sm:mt-0">
-      <h1 className="text-2xl sm:text-4xl font-bold mb-4 sm:mb-8">Life Tracker</h1>
-      <DailyEntryForm />
-    </div>
-  );
+export const dynamic = "force-dynamic";
+
+async function getLatestEntry() {
+  try {
+    const entry = await prisma.dailyEntry.findFirst({
+      where: { deletedAt: null },
+      orderBy: { date: "desc" },
+      include: { gymSession: true },
+    });
+    return entry;
+  } catch {
+    return null;
+  }
+}
+
+export default async function HomePage() {
+  const entry = await getLatestEntry();
+  const snapshot = entryToTodaySnapshot(entry);
+
+  return <TodayView data={snapshot} />;
 }

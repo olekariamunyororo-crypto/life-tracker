@@ -1,20 +1,16 @@
 "use client";
 
-// Client shell around the app chrome. The root layout is a Server Component —
-// anything that needs the pathname (Navbar, particles) lives here instead.
-import { usePathname } from "next/navigation";
-import Navbar from "./Navbar";
-import { ParticleBackground } from "./ParticleBackground";
+import { BottomNav } from "@/components/kolo/BottomNav";
+import { SideNav } from "@/components/kolo/SideNav";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const showParticles = !pathname.includes("/dashboard");
-
   return (
-    <>
-      <Navbar />
-      {showParticles && <ParticleBackground />}
-      <main className="min-h-screen bg-transparent pt-4">{children}</main>
-    </>
+    <div className="flex min-h-screen bg-[var(--kolo-bg)]">
+      <SideNav />
+      <div className="flex min-h-screen flex-1 flex-col">
+        <main className="flex-1">{children}</main>
+        <BottomNav />
+      </div>
+    </div>
   );
 }
