@@ -2,34 +2,95 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --kolo-bg: #f4f5f7;
+  --kolo-surface: #ffffff;
+  --kolo-ink: #0f172a;
+  --kolo-muted: #64748b;
+  --kolo-border: #e8eaef;
+  --kolo-recovery: #22c55e;
+  --kolo-recovery-soft: #dcfce7;
+  --kolo-strain: #ec4899;
+  --kolo-strain-soft: #fce7f3;
+  --kolo-sleep: #6366f1;
+  --kolo-sleep-soft: #e0e7ff;
+  --kolo-accent: #4f46e5;
+  --kolo-radius: 1.25rem;
+  --kolo-radius-lg: 1.75rem;
+  --kolo-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
+  --kolo-shadow-sm: 0 2px 12px rgba(15, 23, 42, 0.04);
+}
+
+.dark {
+  --kolo-bg: #0b1220;
+  --kolo-surface: #111827;
+  --kolo-ink: #f8fafc;
+  --kolo-muted: #94a3b8;
+  --kolo-border: #1f2937;
+  --kolo-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --kolo-shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+html, body { height: 100%; }
 body {
-  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  background: var(--kolo-bg);
+  color: var(--kolo-ink);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Dark mode: dark canvas with light cards (dashboard cards intentionally stay light) */
-.dark body {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color-scheme: dark;
-}
-
-@keyframes fadeIn {
-  from { 
-    opacity: 0;
-    transform: translateY(-20px);
+@layer components {
+  .kolo-page {
+    @apply mx-auto w-full max-w-lg px-4 pb-28 pt-4 sm:max-w-2xl sm:px-6 sm:pb-10 sm:pt-8;
   }
-  to { 
-    opacity: 1;
-    transform: translateY(0);
+  .kolo-card {
+    background: var(--kolo-surface);
+    border: 1px solid var(--kolo-border);
+    border-radius: var(--kolo-radius);
+    box-shadow: var(--kolo-shadow-sm);
+  }
+  .kolo-card-lg {
+    background: var(--kolo-surface);
+    border: 1px solid var(--kolo-border);
+    border-radius: var(--kolo-radius-lg);
+    box-shadow: var(--kolo-shadow);
+  }
+  .kolo-section-title {
+    @apply text-2xl font-semibold tracking-tight sm:text-3xl;
+  }
+  .kolo-muted { color: var(--kolo-muted); }
+  .kolo-pill {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+  .kolo-metric-label {
+    @apply text-xs font-medium uppercase tracking-wide;
+    color: var(--kolo-muted);
+  }
+  .kolo-metric-value {
+    @apply text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl;
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
+.kolo-ring-track { stroke: #e2e8f0; }
+.dark .kolo-ring-track { stroke: #1f2937; }
+
+@keyframes kolo-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.kolo-enter { animation: kolo-fade-up 0.35s ease-out both; }
+.kolo-enter-delay-1 { animation-delay: 0.05s; }
+.kolo-enter-delay-2 { animation-delay: 0.1s; }
+.kolo-enter-delay-3 { animation-delay: 0.15s; }
+
+.kolo-briefing-push {
+  background: linear-gradient(145deg, #fb7185 0%, #e11d48 45%, #a21caf 100%);
+}
+.kolo-briefing-wind {
+  background: linear-gradient(145deg, #8b5cf6 0%, #6d28d9 50%, #4f46e5 100%);
+}
+.kolo-briefing-rest {
+  background: linear-gradient(145deg, #34d399 0%, #059669 55%, #0f766e 100%);
 }
 
-/* Add smooth transition for height changes */
-.transition-all {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 300ms;
-}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
